@@ -18,6 +18,7 @@ uint16_t Value_ADC;
 float BatteryVoltage;
 
 
+
 /**
  * @fn float ReadingBatteryVoltage(ADC_HandleTypeDef *hadc)
  * @brief Read value of battery voltage by using ADC
