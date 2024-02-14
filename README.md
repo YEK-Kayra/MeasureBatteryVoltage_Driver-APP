@@ -18,10 +18,10 @@
 
 1.Block of code where constants are determined
 ```
-#define CriticalVoltageLimit 3.5               //( Critical Voltage Limit of STM32F1)
-#define ConstantOfVoltage 1.272               // ( ConstantOfVoltage = Battery voltage/3.3 = 4.2/3.3 = 1.272)
-#define ConstantOfReferanceVoltage 3.3       //  (Reference voltage value of STM32F1)
-#define ResolationValueOfBits 4095          //   (Resolution of ADC= 2'12=4096 so ADC can read values ​​ 0-4095)
+#define CriticalVoltageLimit 3.5               // ( Critical Voltage Limit of STM32F1)
+#define ConstantOfVoltage 1.272                // ( ConstantOfVoltage = Battery voltage/3.3 = 4.2/3.3 = 1.272)
+#define ConstantOfReferanceVoltage 3.3         // (Reference voltage value of STM32F1)
+#define ResolationValueOfBits 4095             // (Resolution of ADC= 2'12=4096 so ADC can read values ​​ 0-4095)
 
 ```
 2.Block of code where battery voltage value is calculated
