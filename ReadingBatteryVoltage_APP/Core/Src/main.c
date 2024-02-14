@@ -56,7 +56,7 @@ static void MX_ADC1_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-float klm;
+
 /* USER CODE END 0 */
 
 /**

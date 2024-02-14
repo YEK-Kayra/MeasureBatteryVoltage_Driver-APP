@@ -31,25 +31,25 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY
  13 .comment      00000043  00000000  00000000  0002003c  2**0
                   CONTENTS, READONLY
- 14 .debug_info   00005e5f  00000000  00000000  0002007f  2**0
+ 14 .debug_info   00005e4d  00000000  00000000  0002007f  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 15 .debug_abbrev 000016a2  00000000  00000000  00025ede  2**0
+ 15 .debug_abbrev 0000168f  00000000  00000000  00025ecc  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 16 .debug_loclists 000014cf  00000000  00000000  00027580  2**0
+ 16 .debug_loclists 000014cf  00000000  00000000  0002755b  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 17 .debug_aranges 00000448  00000000  00000000  00028a50  2**3
+ 17 .debug_aranges 00000448  00000000  00000000  00028a30  2**3
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 18 .debug_rnglists 00000491  00000000  00000000  00028e98  2**0
+ 18 .debug_rnglists 00000491  00000000  00000000  00028e78  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .debug_macro  000203f0  00000000  00000000  00029329  2**0
+ 19 .debug_macro  000203f0  00000000  00000000  00029309  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 20 .debug_line   00007771  00000000  00000000  00049719  2**0
+ 20 .debug_line   00007771  00000000  00000000  000496f9  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 21 .debug_str    000c8b69  00000000  00000000  00050e8a  2**0
+ 21 .debug_str    000c8bd7  00000000  00000000  00050e6a  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 22 .debug_frame  00000bc8  00000000  00000000  001199f4  2**2
+ 22 .debug_frame  00000bc8  00000000  00000000  00119a44  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 23 .debug_line_str 0000006b  00000000  00000000  0011a5bc  2**0
+ 23 .debug_line_str 0000006b  00000000  00000000  0011a60c  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
 
 Disassembly of section .text:
@@ -889,24 +889,46 @@ Disassembly of section .text:
  8000b2e:	bf00      	nop
 
 08000b30 <ReadingBatteryVoltage>:
+ * @fn float ReadingBatteryVoltage(ADC_HandleTypeDef *hadc)
+ * @brief Read value of battery voltage by using ADC
+ * @param hadc
+ * @retval Value of Battery Voltage
+ */
+float ReadingBatteryVoltage(ADC_HandleTypeDef *hadc){
  8000b30:	b538      	push	{r3, r4, r5, lr}
  8000b32:	4604      	mov	r4, r0
+
+	HAL_ADC_Start(hadc);
  8000b34:	f000 faa2 	bl	800107c <HAL_ADC_Start>
+
+	if(HAL_ADC_PollForConversion(hadc, 1000)==HAL_OK)
  8000b38:	f44f 717a 	mov.w	r1, #1000	; 0x3e8
  8000b3c:	4620      	mov	r0, r4
  8000b3e:	f000 fb4d 	bl	80011dc <HAL_ADC_PollForConversion>
  8000b42:	b130      	cbz	r0, 8000b52 <ReadingBatteryVoltage+0x22>
+
+			}
+
+	}
+
+	HAL_ADC_Stop(hadc);
  8000b44:	4d16      	ldr	r5, [pc, #88]	; (8000ba0 <ReadingBatteryVoltage+0x70>)
  8000b46:	4620      	mov	r0, r4
  8000b48:	f000 fb2c 	bl	80011a4 <HAL_ADC_Stop>
+	return BatteryVoltage;
+}
  8000b4c:	ed95 0a00 	vldr	s0, [r5]
  8000b50:	bd38      	pop	{r3, r4, r5, pc}
+		Value_ADC = HAL_ADC_GetValue(hadc);
  8000b52:	4620      	mov	r0, r4
  8000b54:	f000 fb9c 	bl	8001290 <HAL_ADC_GetValue>
  8000b58:	4a12      	ldr	r2, [pc, #72]	; (8000ba4 <ReadingBatteryVoltage+0x74>)
+		BatteryVoltage = (Value_ADC * (ConstantOfReferanceVoltage / ResolationValueOfBits)  *  ConstantOfVoltage ) ;
  8000b5a:	4d11      	ldr	r5, [pc, #68]	; (8000ba0 <ReadingBatteryVoltage+0x70>)
+		Value_ADC = HAL_ADC_GetValue(hadc);
  8000b5c:	4603      	mov	r3, r0
  8000b5e:	8013      	strh	r3, [r2, #0]
+		BatteryVoltage = (Value_ADC * (ConstantOfReferanceVoltage / ResolationValueOfBits)  *  ConstantOfVoltage ) ;
  8000b60:	b280      	uxth	r0, r0
  8000b62:	f7ff fdad 	bl	80006c0 <__aeabi_i2d>
  8000b66:	a30a      	add	r3, pc, #40	; (adr r3, 8000b90 <ReadingBatteryVoltage+0x60>)
@@ -917,8 +939,10 @@ Disassembly of section .text:
  8000b76:	f7ff fb27 	bl	80001c8 <__aeabi_dmul>
  8000b7a:	f7ff fe0b 	bl	8000794 <__aeabi_d2f>
  8000b7e:	6028      	str	r0, [r5, #0]
+	HAL_ADC_Stop(hadc);
  8000b80:	4620      	mov	r0, r4
  8000b82:	f000 fb0f 	bl	80011a4 <HAL_ADC_Stop>
+}
  8000b86:	ed95 0a00 	vldr	s0, [r5]
  8000b8a:	bd38      	pop	{r3, r4, r5, pc}
  8000b8c:	f3af 8000 	nop.w
@@ -930,64 +954,128 @@ Disassembly of section .text:
  8000ba4:	20000030 	.word	0x20000030
 
 08000ba8 <SystemClock_Config>:
+/**
+  * @brief System Clock Configuration
+  * @retval None
+  */
+void SystemClock_Config(void)
+{
  8000ba8:	b530      	push	{r4, r5, lr}
+  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
  8000baa:	2300      	movs	r3, #0
+{
  8000bac:	b095      	sub	sp, #84	; 0x54
+  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
  8000bae:	e9cd 330b 	strd	r3, r3, [sp, #44]	; 0x2c
  8000bb2:	e9cd 3309 	strd	r3, r3, [sp, #36]	; 0x24
+  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
  8000bb6:	e9cd 3303 	strd	r3, r3, [sp, #12]
  8000bba:	e9cd 3305 	strd	r3, r3, [sp, #20]
+
+  /** Configure the main internal regulator output voltage
+  */
+  __HAL_RCC_PWR_CLK_ENABLE();
  8000bbe:	4921      	ldr	r1, [pc, #132]	; (8000c44 <SystemClock_Config+0x9c>)
  8000bc0:	9301      	str	r3, [sp, #4]
+  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
  8000bc2:	930d      	str	r3, [sp, #52]	; 0x34
+  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
  8000bc4:	9307      	str	r3, [sp, #28]
+  __HAL_RCC_PWR_CLK_ENABLE();
  8000bc6:	6c08      	ldr	r0, [r1, #64]	; 0x40
+  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
  8000bc8:	4a1f      	ldr	r2, [pc, #124]	; (8000c48 <SystemClock_Config+0xa0>)
+  __HAL_RCC_PWR_CLK_ENABLE();
  8000bca:	f040 5080 	orr.w	r0, r0, #268435456	; 0x10000000
  8000bce:	6408      	str	r0, [r1, #64]	; 0x40
  8000bd0:	6c09      	ldr	r1, [r1, #64]	; 0x40
  8000bd2:	f001 5180 	and.w	r1, r1, #268435456	; 0x10000000
  8000bd6:	9101      	str	r1, [sp, #4]
  8000bd8:	9901      	ldr	r1, [sp, #4]
+  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
  8000bda:	9302      	str	r3, [sp, #8]
  8000bdc:	6811      	ldr	r1, [r2, #0]
  8000bde:	f441 4180 	orr.w	r1, r1, #16384	; 0x4000
  8000be2:	6011      	str	r1, [r2, #0]
  8000be4:	6812      	ldr	r2, [r2, #0]
+  */
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
  8000be6:	930f      	str	r3, [sp, #60]	; 0x3c
+  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
  8000be8:	f402 4280 	and.w	r2, r2, #16384	; 0x4000
+  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
  8000bec:	2310      	movs	r3, #16
+  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
  8000bee:	2101      	movs	r1, #1
+  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
  8000bf0:	9202      	str	r2, [sp, #8]
+  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
  8000bf2:	e9cd 130b 	strd	r1, r3, [sp, #44]	; 0x2c
+  RCC_OscInitStruct.PLL.PLLM = 8;
  8000bf6:	2208      	movs	r2, #8
+  RCC_OscInitStruct.PLL.PLLN = 168;
  8000bf8:	23a8      	movs	r3, #168	; 0xa8
  8000bfa:	e9cd 2310 	strd	r2, r3, [sp, #64]	; 0x40
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
  8000bfe:	2402      	movs	r4, #2
+  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
  8000c00:	9802      	ldr	r0, [sp, #8]
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
  8000c02:	9408      	str	r4, [sp, #32]
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
  8000c04:	2202      	movs	r2, #2
  8000c06:	2304      	movs	r3, #4
+  RCC_OscInitStruct.PLL.PLLQ = 4;
+  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
  8000c08:	a808      	add	r0, sp, #32
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
  8000c0a:	e9cd 2312 	strd	r2, r3, [sp, #72]	; 0x48
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
  8000c0e:	940e      	str	r4, [sp, #56]	; 0x38
+  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
  8000c10:	f000 fd80 	bl	8001714 <HAL_RCC_OscConfig>
  8000c14:	b108      	cbz	r0, 8000c1a <SystemClock_Config+0x72>
+  \details Disables IRQ interrupts by setting the I-bit in the CPSR.
+           Can only be executed in Privileged modes.
+ */
+__STATIC_FORCEINLINE void __disable_irq(void)
+{
+  __ASM volatile ("cpsid i" : : : "memory");
  8000c16:	b672      	cpsid	i
+void Error_Handler(void)
+{
+  /* USER CODE BEGIN Error_Handler_Debug */
+  /* User can add his own implementation to report the HAL error return state */
+  __disable_irq();
+  while (1)
  8000c18:	e7fe      	b.n	8000c18 <SystemClock_Config+0x70>
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
  8000c1a:	220f      	movs	r2, #15
  8000c1c:	4603      	mov	r3, r0
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
  8000c1e:	e9cd 2403 	strd	r2, r4, [sp, #12]
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
  8000c22:	f44f 55a0 	mov.w	r5, #5120	; 0x1400
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
  8000c26:	f44f 5280 	mov.w	r2, #4096	; 0x1000
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
  8000c2a:	a803      	add	r0, sp, #12
  8000c2c:	2105      	movs	r1, #5
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
  8000c2e:	e9cd 3505 	strd	r3, r5, [sp, #20]
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
  8000c32:	9207      	str	r2, [sp, #28]
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
  8000c34:	f000 ff86 	bl	8001b44 <HAL_RCC_ClockConfig>
  8000c38:	b108      	cbz	r0, 8000c3e <SystemClock_Config+0x96>
  8000c3a:	b672      	cpsid	i
+  while (1)
  8000c3c:	e7fe      	b.n	8000c3c <SystemClock_Config+0x94>
+}
  8000c3e:	b015      	add	sp, #84	; 0x54
  8000c40:	bd30      	pop	{r4, r5, pc}
  8000c42:	bf00      	nop
@@ -996,25 +1084,38 @@ Disassembly of section .text:
  8000c4c:	00000000 	.word	0x00000000
 
 08000c50 <main>:
+{
  8000c50:	b500      	push	{lr}
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
  8000c52:	2500      	movs	r5, #0
+{
  8000c54:	b08b      	sub	sp, #44	; 0x2c
+  HAL_Init();
  8000c56:	f000 f939 	bl	8000ecc <HAL_Init>
+  SystemClock_Config();
  8000c5a:	f7ff ffa5 	bl	8000ba8 <SystemClock_Config>
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
  8000c5e:	e9cd 5504 	strd	r5, r5, [sp, #16]
  8000c62:	e9cd 5506 	strd	r5, r5, [sp, #24]
+  __HAL_RCC_GPIOH_CLK_ENABLE();
  8000c66:	4b34      	ldr	r3, [pc, #208]	; (8000d38 <main+0xe8>)
  8000c68:	9501      	str	r5, [sp, #4]
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
  8000c6a:	9508      	str	r5, [sp, #32]
+  __HAL_RCC_GPIOH_CLK_ENABLE();
  8000c6c:	6b19      	ldr	r1, [r3, #48]	; 0x30
+  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12, GPIO_PIN_RESET);
  8000c6e:	4833      	ldr	r0, [pc, #204]	; (8000d3c <main+0xec>)
+  hadc1.Instance = ADC1;
  8000c70:	4c33      	ldr	r4, [pc, #204]	; (8000d40 <main+0xf0>)
+  __HAL_RCC_GPIOH_CLK_ENABLE();
  8000c72:	f041 0180 	orr.w	r1, r1, #128	; 0x80
  8000c76:	6319      	str	r1, [r3, #48]	; 0x30
  8000c78:	6b19      	ldr	r1, [r3, #48]	; 0x30
  8000c7a:	f001 0180 	and.w	r1, r1, #128	; 0x80
  8000c7e:	9101      	str	r1, [sp, #4]
  8000c80:	9901      	ldr	r1, [sp, #4]
+  __HAL_RCC_GPIOA_CLK_ENABLE();
  8000c82:	9502      	str	r5, [sp, #8]
  8000c84:	6b19      	ldr	r1, [r3, #48]	; 0x30
  8000c86:	f041 0101 	orr.w	r1, r1, #1
@@ -1023,59 +1124,97 @@ Disassembly of section .text:
  8000c8e:	f001 0101 	and.w	r1, r1, #1
  8000c92:	9102      	str	r1, [sp, #8]
  8000c94:	9902      	ldr	r1, [sp, #8]
+  __HAL_RCC_GPIOD_CLK_ENABLE();
  8000c96:	9503      	str	r5, [sp, #12]
  8000c98:	6b19      	ldr	r1, [r3, #48]	; 0x30
  8000c9a:	f041 0108 	orr.w	r1, r1, #8
  8000c9e:	6319      	str	r1, [r3, #48]	; 0x30
  8000ca0:	6b1b      	ldr	r3, [r3, #48]	; 0x30
  8000ca2:	f003 0308 	and.w	r3, r3, #8
+  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12, GPIO_PIN_RESET);
  8000ca6:	462a      	mov	r2, r5
+  __HAL_RCC_GPIOD_CLK_ENABLE();
  8000ca8:	9303      	str	r3, [sp, #12]
+  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12, GPIO_PIN_RESET);
  8000caa:	f44f 5180 	mov.w	r1, #4096	; 0x1000
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
  8000cae:	2601      	movs	r6, #1
+  __HAL_RCC_GPIOD_CLK_ENABLE();
  8000cb0:	9b03      	ldr	r3, [sp, #12]
+  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12, GPIO_PIN_RESET);
  8000cb2:	f000 fd2b 	bl	800170c <HAL_GPIO_WritePin>
+  GPIO_InitStruct.Pin = GPIO_PIN_12;
  8000cb6:	f44f 5380 	mov.w	r3, #4096	; 0x1000
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
  8000cba:	4820      	ldr	r0, [pc, #128]	; (8000d3c <main+0xec>)
  8000cbc:	a904      	add	r1, sp, #16
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
  8000cbe:	e9cd 3604 	strd	r3, r6, [sp, #16]
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
  8000cc2:	e9cd 5506 	strd	r5, r5, [sp, #24]
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
  8000cc6:	f000 fbff 	bl	80014c8 <HAL_GPIO_Init>
+  hadc1.Instance = ADC1;
  8000cca:	4b1e      	ldr	r3, [pc, #120]	; (8000d44 <main+0xf4>)
+  hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
  8000ccc:	4a1e      	ldr	r2, [pc, #120]	; (8000d48 <main+0xf8>)
+  hadc1.Instance = ADC1;
  8000cce:	6023      	str	r3, [r4, #0]
+  hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
  8000cd0:	f44f 3380 	mov.w	r3, #65536	; 0x10000
+  hadc1.Init.Resolution = ADC_RESOLUTION_12B;
  8000cd4:	e9c4 3501 	strd	r3, r5, [r4, #4]
+  if (HAL_ADC_Init(&hadc1) != HAL_OK)
  8000cd8:	4620      	mov	r0, r4
+  hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
  8000cda:	2300      	movs	r3, #0
+  ADC_ChannelConfTypeDef sConfig = {0};
  8000cdc:	e9cd 5504 	strd	r5, r5, [sp, #16]
  8000ce0:	e9cd 5506 	strd	r5, r5, [sp, #24]
+  hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
  8000ce4:	e9c4 230a 	strd	r2, r3, [r4, #40]	; 0x28
+  hadc1.Init.ScanConvMode = DISABLE;
  8000ce8:	6125      	str	r5, [r4, #16]
+  hadc1.Init.ContinuousConvMode = ENABLE;
  8000cea:	7626      	strb	r6, [r4, #24]
+  hadc1.Init.DiscontinuousConvMode = DISABLE;
  8000cec:	f884 5020 	strb.w	r5, [r4, #32]
+  hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
  8000cf0:	60e5      	str	r5, [r4, #12]
+  hadc1.Init.DMAContinuousRequests = DISABLE;
  8000cf2:	f884 5030 	strb.w	r5, [r4, #48]	; 0x30
+  hadc1.Init.NbrOfConversion = 1;
  8000cf6:	61e6      	str	r6, [r4, #28]
+  hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
  8000cf8:	6166      	str	r6, [r4, #20]
+  if (HAL_ADC_Init(&hadc1) != HAL_OK)
  8000cfa:	f000 f913 	bl	8000f24 <HAL_ADC_Init>
  8000cfe:	b108      	cbz	r0, 8000d04 <main+0xb4>
  8000d00:	b672      	cpsid	i
+  while (1)
  8000d02:	e7fe      	b.n	8000d02 <main+0xb2>
+  sConfig.Channel = ADC_CHANNEL_0;
  8000d04:	ed9f 7b0a 	vldr	d7, [pc, #40]	; 8000d30 <main+0xe0>
  8000d08:	4603      	mov	r3, r0
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
  8000d0a:	a904      	add	r1, sp, #16
  8000d0c:	4620      	mov	r0, r4
+  sConfig.Channel = ADC_CHANNEL_0;
  8000d0e:	ed8d 7b04 	vstr	d7, [sp, #16]
+  sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
  8000d12:	9306      	str	r3, [sp, #24]
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
  8000d14:	f000 fac0 	bl	8001298 <HAL_ADC_ConfigChannel>
  8000d18:	b108      	cbz	r0, 8000d1e <main+0xce>
  8000d1a:	b672      	cpsid	i
+  while (1)
  8000d1c:	e7fe      	b.n	8000d1c <main+0xcc>
+	ReadingBatteryVoltage(&hadc1);
  8000d1e:	4620      	mov	r0, r4
  8000d20:	f7ff ff06 	bl	8000b30 <ReadingBatteryVoltage>
  8000d24:	4620      	mov	r0, r4
  8000d26:	f7ff ff03 	bl	8000b30 <ReadingBatteryVoltage>
+  while (1)
  8000d2a:	e7f8      	b.n	8000d1e <main+0xce>
  8000d2c:	f3af 8000 	nop.w
  8000d30:	00000000 	.word	0x00000000
